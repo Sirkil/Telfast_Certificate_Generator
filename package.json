@@ -1,17 +1,15 @@
 {
-  "name": "telfast-gac-dadd-certificate-generator",
+  "name": "telfast-certificate-generator",
   "version": "1.0.0",
+  "description": "Certificate generator - Frontend Only",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "axios": "^1.6.7",
-    "body-parser": "^1.20.2",
-    "canvas": "^2.11.2",
     "dotenv": "^16.4.7",
-    "express": "^4.19.2",
-    "nodemailer": "^6.9.13"
+    "express": "^4.19.2"
   },
   "engines": {
     "node": ">=18.0.0"

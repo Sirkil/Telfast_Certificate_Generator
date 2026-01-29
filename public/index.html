@@ -12,7 +12,7 @@
 
     <div class="card-container max-w-lg w-full bg-white rounded-2xl shadow-xl p-6 text-center">
         <h1 class="title text-2xl font-bold mb-2">Registration Successful!</h1>
-        <p class="description text-gray-600 mb-6 text-sm">A copy has been sent to your email. You can also preview and download it below.</p>
+        <p class="description text-gray-600 mb-6 text-sm">You can preview and download your certificate below.</p>
         
         <div class="preview-box border rounded-lg overflow-hidden mb-6 bg-gray-100 relative">
             <canvas id="certCanvas" class="w-full h-auto"></canvas>
@@ -47,12 +47,12 @@
             // 2. Draw Image
             ctx.drawImage(img, 0, 0);
 
-            // 3. Draw Name (If present)
+            // 3. Draw Name
             if (userName) {
                 ctx.font = 'bold 50px Arial';
-                ctx.fillStyle = '#5e3378';
+                ctx.fillStyle = '#5e3378'; // Purple Color
                 ctx.textAlign = 'center';
-                // Coordinates: Center Width, 508 Height
+                // Adjust height (508) if needed
                 ctx.fillText(userName, canvas.width / 2, 508);
             }
         }
@@ -61,7 +61,7 @@
             const { jsPDF } = window.jspdf;
             const canvas = document.getElementById('certCanvas');
             
-            // Create PDF from the Canvas (which has the name on it)
+            // Generate PDF from the Canvas
             const doc = new jsPDF({
                 orientation: "landscape",
                 unit: "px",
