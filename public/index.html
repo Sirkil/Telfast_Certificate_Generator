@@ -6,22 +6,23 @@
     <title>Telfast DADD Certificate</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
 
-    <div class="max-w-lg w-full bg-white rounded-2xl shadow-xl p-6 text-center">
-        <h1 class="text-2xl font-bold text-[#5e3378] mb-2">Registration Successful!</h1>
-        <p class="text-gray-600 mb-6 text-sm">A copy has been sent to your email. You can also preview and download it below.</p>
+    <div class="card-container max-w-lg w-full bg-white rounded-2xl shadow-xl p-6 text-center">
+        <h1 class="title text-2xl font-bold mb-2">Registration Successful!</h1>
+        <p class="description text-gray-600 mb-6 text-sm">A copy has been sent to your email. You can also preview and download it below.</p>
         
-        <div class="border rounded-lg overflow-hidden mb-6 bg-gray-100">
-            <img id="certPreview" src="Certificate.png" alt="Certificate Preview" class="w-full h-auto">
+        <div class="preview-box border rounded-lg overflow-hidden mb-6 bg-gray-100">
+            <img id="certPreview" src="https://raw.githubusercontent.com/Sirkil/Telfast_Certificate_Generator/main/Certificate.jpg" alt="Certificate Preview" class="w-full h-auto" crossorigin="anonymous">
         </div>
 
-        <button onclick="downloadPDF()" class="w-full bg-[#5e3378] text-white py-4 rounded-xl font-bold shadow-lg hover:bg-[#4a2b75] transition-all">
+        <button onclick="downloadPDF()" class="download-btn w-full text-white py-4 rounded-xl font-bold shadow-lg transition-all">
             Save as PDF
         </button>
         
-        <p class="mt-4 text-xs text-gray-400 font-medium uppercase tracking-widest">Opella | WAO</p>
+        <p class="footer-brand mt-4 text-xs text-gray-400 font-medium uppercase tracking-widest">Opella | WAO</p>
     </div>
 
     <script>
@@ -29,7 +30,7 @@
             const { jsPDF } = window.jspdf;
             const img = document.getElementById('certPreview');
             
-            // Create PDF in Landscape
+            // Create PDF in Landscape based on image dimensions
             const doc = new jsPDF({
                 orientation: "landscape",
                 unit: "px",
@@ -41,5 +42,4 @@
         }
     </script>
 </body>
-
 </html>
