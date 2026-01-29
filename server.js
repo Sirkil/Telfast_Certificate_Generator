@@ -12,9 +12,9 @@ app.use(express.static('public'));
 // 1. Email Configuration (Use App Passwords for Gmail)
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: {
-        user: 'your-email@gmail.com',
-        pass: 'your-app-password-here' 
+     auth: {
+        user: 'ahmedtanany25@gmail.com',
+        pass: 'omyu lhok gonl iprl' 
     }
 });
 
@@ -66,4 +66,5 @@ async function generateCertificateBuffer(name, imagePath) {
 }
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
