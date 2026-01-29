@@ -1,4 +1,3 @@
-// Load environment variables for local testing
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
@@ -6,79 +5,83 @@ if (process.env.NODE_ENV !== 'production') {
 const express = require('express');
 const { createCanvas, loadImage } = require('canvas');
 const nodemailer = require('nodemailer');
+const axios = require('axios'); // Add this for API calls
 const path = require('path');
 
 const app = express();
-
-// Middleware to parse data and serve static files from a 'public' folder
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public')); 
+app.use(express.static('public'));
 
-// Email Transporter Configuration
+// Configure your GMAIL and JOTFORM secrets in Render dashboard
+const GMAIL_USER = process.env.GMAIL_USER; //
+const GMAIL_PASS = process.env.GMAIL_PASS; 
+const JOTFORM_API_KEY = process.env.JOTFORM_API_KEY; 
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: {
-        user: process.env.GMAIL_USER, // e.g., ahmedtanany25@gmail.com
-        pass: process.env.GMAIL_PASS  // 16-character App Password
+    auth: { user: GMAIL_USER, pass: GMAIL_PASS }
+});
+
+// Route to fetch data from API and process certificate
+app.get('/process-certificate', async (req, res) => {
+    const submissionId = req.query.submission_id;
+
+    if (!submissionId) return res.status(400).send("No Submission ID provided.");
+
+    try {
+        // Fetch data from Jotform API
+        const response = await axios.get(`https://api.jotform.com/submission/${submissionId}?apiKey=${JOTFORM_API_KEY}`);
+        const data = response.data.content.answers;
+
+        // Map fields manually (Check your form's unique names)
+        // Usually: q1_name (Full Name), q2_email (Email)
+        let firstName = "Member", lastName = "", email = "";
+        
+        for (let key in data) {
+            if (data[key].name === 'name' || data[key].text.includes('Name')) {
+                firstName = data[key].answer.first;
+                lastName = data[key].answer.last;
+            }
+            if (data[key].name === 'email' || data[key].text.includes('Email')) {
+                email = data[key].answer;
+            }
+        }
+
+        const fullName = `Dr. ${firstName} ${lastName}`;
+        const imagePath = path.join(__dirname, 'CERTIFICATE_Edited_V4.jpg');
+        const image = await loadImage(imagePath);
+        
+        const canvas = createCanvas(image.width, image.height);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+
+        // Styling
+        ctx.font = 'bold 50px Arial';
+        ctx.fillStyle = '#5e3378'; // Your specific purple
+        ctx.textAlign = 'center';
+        ctx.fillText(fullName, image.width / 2, 508);
+
+        const buffer = canvas.toBuffer('image/jpeg');
+
+        // Send Email
+        await transporter.sendMail({
+            from: `"Telfast DADD" <${GMAIL_USER}>`,
+            to: email,
+            subject: "Your DADD Certificate",
+            attachments: [{ filename: 'Certificate.jpg', content: buffer }]
+        });
+
+        // Redirect user to the success page
+        res.redirect('/?success=true');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("API Error");
     }
 });
 
-// GET Route: Fixes "Cannot GET /" by serving your index.html
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// POST Route: Handles Jotform Webhook
-app.post('/webhook', async (req, res) => {
-    // Check your Render logs to see what Jotform is sending!
-    console.log("Jotform Data Received:", req.body);
-
-    try {
-        // Adjust these IDs based on your 'Unique Name' in Jotform
-        const firstName = req.body.q1_name?.first || "User";
-        const lastName = req.body.q1_name?.last || "";
-        const userEmail = req.body.q2_email || req.body.email; // Recipient from form
-        const fullName = `Dr. ${firstName} ${lastName}`;
-
-        const imagePath = path.join(__dirname, 'Certificate.jpg');
-        const image = await loadImage(imagePath);
-        const canvas = createCanvas(image.width, image.height);
-        const ctx = canvas.getContext('2d');
-
-        ctx.drawImage(image, 0, 0);
-        
-        // Draw the Name
-        ctx.font = 'bold 50px Arial';
-        ctx.fillStyle = '#5e3378';
-        ctx.textAlign = 'center';
-        ctx.fillText(fullName, image.width / 2, 508);
-
-        // Convert canvas to Buffer
-        const buffer = canvas.toBuffer('image/jpeg');
-
-        // Send Email with PDF Attachment
-        await transporter.sendMail({
-            from: `"Telfast DADD" <${process.env.GMAIL_USER}>`,
-            to: userEmail, // Sends to the address input in the form
-            subject: "Your DADD Certificate of Commitment",
-            text: `Dear ${fullName}, attached is your certificate.`,
-            attachments: [
-                {
-                    filename: 'Certificate.jpg', // You can wrap this in a PDF library later if needed
-                    content: buffer
-                }
-            ]
-        });
-
-        res.status(200).send('Success');
-    } catch (err) {
-        console.error("Email Error:", err);
-        res.status(500).send('Error');
-    }
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server active on port ${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log(`Server live on ${PORT}`));
