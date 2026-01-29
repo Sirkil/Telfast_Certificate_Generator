@@ -3,32 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Certificate</title>
+    <title>Telfast DADD Certificate</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
 
-    <div class="bg-white p-6 rounded-xl shadow-lg max-w-md w-full text-center">
-        <h1 class="text-2xl font-bold text-[#5e3378] mb-4">Certificate Generated!</h1>
-        <p class="mb-6 text-gray-600">A copy has been sent to your email. You can also download it below.</p>
+    <div class="max-w-lg w-full bg-white rounded-2xl shadow-xl p-6 text-center">
+        <h1 class="text-2xl font-bold text-[#5e3378] mb-2">Registration Successful!</h1>
+        <p class="text-gray-600 mb-6 text-sm">A copy has been sent to your email. You can also preview and download it below.</p>
         
-        <div id="cert-preview" class="border rounded mb-6 overflow-hidden">
-            <img id="outputImage" src="" alt="Your Certificate" class="w-full h-auto">
+        <div class="border rounded-lg overflow-hidden mb-6 bg-gray-100">
+            <img id="certPreview" src="CERTIFICATE_Edited_V4.jpg" alt="Certificate Preview" class="w-full h-auto">
         </div>
 
-        <button onclick="downloadPDF()" class="bg-[#5e3378] text-white px-6 py-3 rounded-lg font-bold w-full hover:opacity-90 transition">
+        <button onclick="downloadPDF()" class="w-full bg-[#5e3378] text-white py-4 rounded-xl font-bold shadow-lg hover:bg-[#4a2b75] transition-all">
             Save as PDF
         </button>
+        
+        <p class="mt-4 text-xs text-gray-400 font-medium uppercase tracking-widest">Opella | WAO</p>
     </div>
 
     <script>
-        // Logic to convert the image to PDF for the user
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'px', [1000, 800]); // Adjust to your image ratio
-            const img = document.getElementById('outputImage');
-            doc.addImage(img, 'JPEG', 0, 0, 1000, 800);
+            const img = document.getElementById('certPreview');
+            
+            // Create PDF in Landscape
+            const doc = new jsPDF({
+                orientation: "landscape",
+                unit: "px",
+                format: [img.naturalWidth || 1000, img.naturalHeight || 800]
+            });
+
+            doc.addImage(img, 'JPEG', 0, 0, img.naturalWidth, img.naturalHeight);
             doc.save('DADD_Certificate.pdf');
         }
     </script>
