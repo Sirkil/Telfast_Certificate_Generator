@@ -38,7 +38,7 @@ app.post('/webhook', async (req, res) => {
         // Fixed "Dr." prefix as requested
         const fullName = `Dr. ${firstName} ${lastName}`;
 
-        const imagePath = path.join(__dirname, 'CERTIFICATE_Edited_V4.jpg');
+        const imagePath = path.join(__dirname, 'Certificate.png');
         const image = await loadImage(imagePath);
         const canvas = createCanvas(image.width, image.height);
         const ctx = canvas.getContext('2d');
@@ -74,4 +74,5 @@ app.post('/webhook', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server active on port ${PORT}`);
+
 });
