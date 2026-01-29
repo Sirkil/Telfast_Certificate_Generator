@@ -35,9 +35,9 @@ app.post('/webhook', async (req, res) => {
 
     try {
         // Extracting names and email based on standard Jotform naming
-        const firstName = req.body.q1_name?.first || "Member";
-        const lastName = req.body.q1_name?.last || "";
-        const email = req.body.q2_email || req.body.email; // Recipient email
+        const firstName = req.body.name?.first || "Member";
+        const lastName = req.body.name?.last || "";
+        const email = req.body.email || req.body.email; // Recipient email
         
         if (!email) {
             console.error("No email address found in the webhook data!");
@@ -84,4 +84,5 @@ app.post('/webhook', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server active on port ${PORT}`);
+
 });
