@@ -61,7 +61,7 @@ app.post('/webhook', async (req, res) => {
             from: `"Telfast DADD" <${process.env.GMAIL_USER}>`,
             to: email,
             subject: "Your DADD Certificate of Commitment",
-            attachments: [{ filename: 'Certificate.jpg', content: buffer }]
+            attachments: [{ filename: 'Certificate.png', content: buffer }]
         });
 
         res.status(200).send('Success');
@@ -74,5 +74,4 @@ app.post('/webhook', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server active on port ${PORT}`);
-
 });
