@@ -31,9 +31,9 @@ app.get('/', (req, res) => {
 app.post('/webhook', async (req, res) => {
     try {
         // Jotform field mapping
-        const firstName = req.body.q1_name?.first || "Member";
-        const lastName = req.body.q1_name?.last || "";
-        const email = req.body.q2_email || req.body.email;
+        const firstName = req.body.name?.first || "Member";
+        const lastName = req.body.name?.last || "";
+        const email = req.body.email || req.body.email;
         
         // Fixed "Dr." prefix as requested
         const fullName = `Dr. ${firstName} ${lastName}`;
@@ -75,3 +75,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server active on port ${PORT}`);
 });
+
