@@ -1,3 +1,10 @@
 .title { color: #5e3378; }
-.download-btn { background-color: #5e3378; }
-.download-btn:hover { background-color: #4a2b75; transform: translateY(-1px); }
+
+.download-btn {
+    background-color: #5e3378; 
+}
+
+.download-btn:hover {
+    background-color: #4a2b75; 
+    transform: translateY(-1px);
+}

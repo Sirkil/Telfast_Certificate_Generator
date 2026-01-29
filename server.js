@@ -9,6 +9,7 @@ const path = require('path');
 const app = express();
 app.use(express.static('public')); // Serves the frontend
 
+// 1. Email Configuration
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -17,23 +18,24 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// 1. The Entry Point: Jotform Redirects Here
+// 2. THE NEW API ROUTE (Replaces Webhook)
 app.get('/process-certificate', async (req, res) => {
     const submissionId = req.query.submission_id;
     const apiKey = process.env.JOTFORM_API_KEY;
 
-    if (!submissionId) return res.send("Error: No Submission ID.");
+    if (!submissionId) return res.send("Error: No Submission ID found in URL.");
 
     try {
-        // A. Get Data from Jotform
+        // A. Fetch Data from Jotform API
         const response = await axios.get(`https://api.jotform.com/submission/${submissionId}?apiKey=${apiKey}`);
         const answers = response.data.content.answers;
 
-        // B. Find Name and Email dynamically
+        // B. Extract Name and Email Dynamically
         let firstName = "Doctor";
         let lastName = "";
         let email = "";
 
+        // Loop through all answers to find the correct fields regardless of ID
         for (let key in answers) {
             const field = answers[key];
             if (field.type === 'control_fullname') {
@@ -46,7 +48,7 @@ app.get('/process-certificate', async (req, res) => {
 
         const fullName = `Dr. ${firstName} ${lastName}`;
 
-        // C. Generate Image for EMAIL (Server-side)
+        // C. Generate Image for EMAIL Attachment (Server-Side)
         const imagePath = path.join(__dirname, 'Certificate.jpg');
         const image = await loadImage(imagePath);
         const canvas = createCanvas(image.width, image.height);
@@ -56,7 +58,7 @@ app.get('/process-certificate', async (req, res) => {
         ctx.font = 'bold 50px Arial';
         ctx.fillStyle = '#5e3378';
         ctx.textAlign = 'center';
-        // Coordinates for the email attachment
+        // Coordinates for server-generated image
         ctx.fillText(fullName, image.width / 2, 508);
 
         const buffer = canvas.toBuffer('image/jpeg');
@@ -72,13 +74,12 @@ app.get('/process-certificate', async (req, res) => {
 
         console.log(`Email sent to ${email}`);
 
-        // E. Redirect to Frontend with the Name (So user can see it)
-        // We use encodeURIComponent to handle spaces safely
+        // E. Redirect to Frontend with Name (So user sees it live)
         res.redirect(`/?name=${encodeURIComponent(fullName)}&success=true`);
 
     } catch (err) {
-        console.error("Error:", err.message);
-        res.status(500).send("Error processing certificate. Please check logs.");
+        console.error("API Processing Error:", err.message);
+        res.status(500).send("Error processing certificate. Please check Render logs.");
     }
 });
 

@@ -10,31 +10,66 @@
 </head>
 <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
 
-    <div class="max-w-lg w-full bg-white rounded-2xl shadow-xl p-6 text-center">
-        <h1 class="text-2xl font-bold text-[#5e3378] mb-2">Registration Successful!</h1>
-        <p class="text-gray-600 mb-6 text-sm">Your certificate is being sent to your email. You can also download it below.</p>
+    <div class="card-container max-w-lg w-full bg-white rounded-2xl shadow-xl p-6 text-center">
+        <h1 class="title text-2xl font-bold mb-2">Registration Successful!</h1>
+        <p class="description text-gray-600 mb-6 text-sm">A copy has been sent to your email. You can also preview and download it below.</p>
         
-        <div class="border rounded-lg overflow-hidden mb-6 bg-gray-100">
-            <img id="certPreview" src="https://raw.githubusercontent.com/Sirkil/Telfast_Certificate_Generator/main/Certificate.jpg" alt="Certificate Preview" class="w-full h-auto">
+        <div class="preview-box border rounded-lg overflow-hidden mb-6 bg-gray-100 relative">
+            <canvas id="certCanvas" class="w-full h-auto"></canvas>
+            
+            <img id="sourceImage" 
+                 src="https://raw.githubusercontent.com/Sirkil/Telfast_Certificate_Generator/main/CERTIFICATE_Edited_V4.jpg" 
+                 crossorigin="anonymous" 
+                 style="display:none;" 
+                 onload="drawCertificate()">
         </div>
 
-        <button id="downloadBtn" onclick="downloadPDF()" class="w-full bg-[#5e3378] text-white py-4 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all">
+        <button onclick="downloadPDF()" class="download-btn w-full text-white py-4 rounded-xl font-bold shadow-lg transition-all">
             Save as PDF
         </button>
         
-        <p class="mt-4 text-xs text-gray-400 font-medium uppercase tracking-widest">Opella | WAO</p>
+        <p class="footer-brand mt-4 text-xs text-gray-400 font-medium uppercase tracking-widest">Opella | WAO</p>
     </div>
 
     <script>
+        function drawCertificate() {
+            const params = new URLSearchParams(window.location.search);
+            const userName = params.get('name') || ""; // Get name from URL
+
+            const canvas = document.getElementById('certCanvas');
+            const ctx = canvas.getContext('2d');
+            const img = document.getElementById('sourceImage');
+
+            // 1. Set Canvas size to match Image
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+
+            // 2. Draw Image
+            ctx.drawImage(img, 0, 0);
+
+            // 3. Draw Name (If present)
+            if (userName) {
+                ctx.font = 'bold 50px Arial';
+                ctx.fillStyle = '#5e3378';
+                ctx.textAlign = 'center';
+                // Coordinates: Center Width, 508 Height
+                ctx.fillText(userName, canvas.width / 2, 508);
+            }
+        }
+
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
-            const img = document.getElementById('certPreview');
+            const canvas = document.getElementById('certCanvas');
+            
+            // Create PDF from the Canvas (which has the name on it)
             const doc = new jsPDF({
                 orientation: "landscape",
                 unit: "px",
-                format: [img.naturalWidth || 1000, img.naturalHeight || 800]
+                format: [canvas.width, canvas.height]
             });
-            doc.addImage(img, 'JPEG', 0, 0, img.naturalWidth, img.naturalHeight);
+
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            doc.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
             doc.save('DADD_Certificate.pdf');
         }
     </script>
