@@ -31,20 +31,15 @@ app.get('/', (req, res) => {
 
 // POST Route: Handles Jotform Webhook
 app.post('/webhook', async (req, res) => {
-    console.log("Incoming Jotform Data:", JSON.stringify(req.body)); // Log data for debugging
+    // Check your Render logs to see what Jotform is sending!
+    console.log("Jotform Data Received:", req.body);
 
     try {
-        // Extracting names and email based on standard Jotform naming
-        const firstName = req.body.name?.first || "Member";
-        const lastName = req.body.name?.last || "";
-        const email = req.body.email || req.body.email; // Recipient email
-        
-        if (!email) {
-            console.error("No email address found in the webhook data!");
-            return res.status(400).send("Email missing");
-        }
-
-        const fullName = `Dr. ${firstName} ${lastName}`; // Fixed Dr. prefix
+        // Adjust these IDs based on your 'Unique Name' in Jotform
+        const firstName = req.body.q1_name?.first || "User";
+        const lastName = req.body.q1_name?.last || "";
+        const userEmail = req.body.q2_email || req.body.email; // Recipient from form
+        const fullName = `Dr. ${firstName} ${lastName}`;
 
         const imagePath = path.join(__dirname, 'Certificate.jpg');
         const image = await loadImage(imagePath);
@@ -53,36 +48,37 @@ app.post('/webhook', async (req, res) => {
 
         ctx.drawImage(image, 0, 0);
         
-        // Text Styling
-        ctx.font = 'bold 50px Arial'; // Requested Arial font
-        ctx.fillStyle = '#5e3378';    // Requested text color
+        // Draw the Name
+        ctx.font = 'bold 50px Arial';
+        ctx.fillStyle = '#5e3378';
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom'; 
-
-        // Placement (Middle width, adjusted height for the line)
         ctx.fillText(fullName, image.width / 2, 508);
 
+        // Convert canvas to Buffer
         const buffer = canvas.toBuffer('image/jpeg');
 
-        // Sending Email
+        // Send Email with PDF Attachment
         await transporter.sendMail({
             from: `"Telfast DADD" <${process.env.GMAIL_USER}>`,
-            to: email,
+            to: userEmail, // Sends to the address input in the form
             subject: "Your DADD Certificate of Commitment",
-            text: `Hello ${fullName}, please find your certificate attached.`,
-            attachments: [{ filename: 'Certificate.jpg', content: buffer }]
+            text: `Dear ${fullName}, attached is your certificate.`,
+            attachments: [
+                {
+                    filename: 'Certificate.jpg', // You can wrap this in a PDF library later if needed
+                    content: buffer
+                }
+            ]
         });
 
-        console.log(`Certificate successfully emailed to ${email}`);
         res.status(200).send('Success');
     } catch (err) {
-        console.error("CRITICAL EMAIL ERROR:", err.message);
-        res.status(500).send('Processing Error');
+        console.error("Email Error:", err);
+        res.status(500).send('Error');
     }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server active on port ${PORT}`);
-
 });
