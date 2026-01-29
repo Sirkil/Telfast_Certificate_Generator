@@ -1,29 +1,3 @@
-/* Custom Branding Styles */
-
-.title {
-    color: #5e3378;
-}
-
-.download-btn {
-    background-color: #5e3378;
-}
-
-.download-btn:hover {
-    background-color: #4a2b75;
-    transform: translateY(-1px);
-}
-
-.download-btn:active {
-    transform: translateY(1px);
-}
-
-.preview-box img {
-    display: block;
-    max-width: 100%;
-    height: auto;
-}
-
-/* Ensure smooth transitions for the button */
-.transition-all {
-    transition: all 0.3s ease;
-}
+.title { color: #5e3378; }
+.download-btn { background-color: #5e3378; }
+.download-btn:hover { background-color: #4a2b75; transform: translateY(-1px); }

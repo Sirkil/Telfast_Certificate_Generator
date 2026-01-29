@@ -1,87 +1,86 @@
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 
 const express = require('express');
 const { createCanvas, loadImage } = require('canvas');
 const nodemailer = require('nodemailer');
-const axios = require('axios'); // Add this for API calls
+const axios = require('axios');
 const path = require('path');
 
 const app = express();
-app.use(express.json());
-app.use(express.static('public'));
-
-// Configure your GMAIL and JOTFORM secrets in Render dashboard
-const GMAIL_USER = process.env.GMAIL_USER; //
-const GMAIL_PASS = process.env.GMAIL_PASS; 
-const JOTFORM_API_KEY = process.env.JOTFORM_API_KEY; 
+app.use(express.static('public')); // Serves the frontend
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: { user: GMAIL_USER, pass: GMAIL_PASS }
+    auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS 
+    }
 });
 
-// Route to fetch data from API and process certificate
+// 1. The Entry Point: Jotform Redirects Here
 app.get('/process-certificate', async (req, res) => {
     const submissionId = req.query.submission_id;
+    const apiKey = process.env.JOTFORM_API_KEY;
 
-    if (!submissionId) return res.status(400).send("No Submission ID provided.");
+    if (!submissionId) return res.send("Error: No Submission ID.");
 
     try {
-        // Fetch data from Jotform API
-        const response = await axios.get(`https://api.jotform.com/submission/${submissionId}?apiKey=${JOTFORM_API_KEY}`);
-        const data = response.data.content.answers;
+        // A. Get Data from Jotform
+        const response = await axios.get(`https://api.jotform.com/submission/${submissionId}?apiKey=${apiKey}`);
+        const answers = response.data.content.answers;
 
-        // Map fields manually (Check your form's unique names)
-        // Usually: q1_name (Full Name), q2_email (Email)
-        let firstName = "Member", lastName = "", email = "";
-        
-        for (let key in data) {
-            if (data[key].name === 'name' || data[key].text.includes('Name')) {
-                firstName = data[key].answer.first;
-                lastName = data[key].answer.last;
-            }
-            if (data[key].name === 'email' || data[key].text.includes('Email')) {
-                email = data[key].answer;
+        // B. Find Name and Email dynamically
+        let firstName = "Doctor";
+        let lastName = "";
+        let email = "";
+
+        for (let key in answers) {
+            const field = answers[key];
+            if (field.type === 'control_fullname') {
+                firstName = field.answer.first;
+                lastName = field.answer.last;
+            } else if (field.type === 'control_email') {
+                email = field.answer;
             }
         }
 
         const fullName = `Dr. ${firstName} ${lastName}`;
-        const imagePath = path.join(__dirname, 'CERTIFICATE_Edited_V4.jpg');
+
+        // C. Generate Image for EMAIL (Server-side)
+        const imagePath = path.join(__dirname, 'Certificate.jpg');
         const image = await loadImage(imagePath);
-        
         const canvas = createCanvas(image.width, image.height);
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(image, 0, 0);
 
-        // Styling
+        ctx.drawImage(image, 0, 0);
         ctx.font = 'bold 50px Arial';
-        ctx.fillStyle = '#5e3378'; // Your specific purple
+        ctx.fillStyle = '#5e3378';
         ctx.textAlign = 'center';
+        // Coordinates for the email attachment
         ctx.fillText(fullName, image.width / 2, 508);
 
         const buffer = canvas.toBuffer('image/jpeg');
 
-        // Send Email
+        // D. Send Email
         await transporter.sendMail({
-            from: `"Telfast DADD" <${GMAIL_USER}>`,
+            from: `"Telfast DADD" <${process.env.GMAIL_USER}>`,
             to: email,
-            subject: "Your DADD Certificate",
+            subject: "Your DADD Certificate of Commitment",
+            text: `Dear ${fullName}, please find your certificate attached.`,
             attachments: [{ filename: 'Certificate.jpg', content: buffer }]
         });
 
-        // Redirect user to the success page
-        res.redirect('/?success=true');
+        console.log(`Email sent to ${email}`);
+
+        // E. Redirect to Frontend with the Name (So user can see it)
+        // We use encodeURIComponent to handle spaces safely
+        res.redirect(`/?name=${encodeURIComponent(fullName)}&success=true`);
+
     } catch (err) {
-        console.error(err);
-        res.status(500).send("API Error");
+        console.error("Error:", err.message);
+        res.status(500).send("Error processing certificate. Please check logs.");
     }
 });
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => console.log(`Server live on ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server running on ${PORT}`));
