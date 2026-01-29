@@ -1,70 +1,57 @@
+require('dotenv').config();
 const express = require('express');
 const { createCanvas, loadImage } = require('canvas');
 const nodemailer = require('nodemailer');
-const bodyParser = require('body-parser');
 const path = require('path');
 
 const app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.static('public'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// 1. Email Configuration (Use App Passwords for Gmail)
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-     auth: {
-        user: 'ahmedtanany25@gmail.com',
-        pass: 'omyu lhok gonl iprl' 
+    auth: {
+        user: process.env.GMAIL_USER, // Set in Render Dashboard
+        pass: process.env.GMAIL_PASS  // Your 16-character App Password
     }
 });
 
-// 2. Jotform Webhook Endpoint
 app.post('/webhook', async (req, res) => {
     try {
-        // Jotform field IDs vary; check your Jotform API/Webhook logs
-        const firstName = req.body.q1_name?.first || "User";
+        // Mapping Jotform fields (verify these IDs in your Jotform account)
+        const firstName = req.body.q1_name?.first || "Member";
         const lastName = req.body.q1_name?.last || "";
         const email = req.body.q2_email || req.body.email;
         const fullName = `Dr. ${firstName} ${lastName}`;
 
         const imagePath = path.join(__dirname, 'CERTIFICATE_Edited_V4.jpg');
-        const buffer = await generateCertificateBuffer(fullName, imagePath);
+        const image = await loadImage(imagePath);
+        const canvas = createCanvas(image.width, image.height);
+        const ctx = canvas.getContext('2d');
 
-        // Send Email
+        ctx.drawImage(image, 0, 0);
+        ctx.font = 'bold 50px Arial';
+        ctx.fillStyle = '#5e3378';
+        ctx.textAlign = 'center';
+
+        // Coordinates: Middle width, ~510px height (adjust based on the line)
+        ctx.fillText(fullName, image.width / 2, 510);
+
+        const buffer = canvas.toBuffer('image/jpeg');
+
         await transporter.sendMail({
-            from: '"Telfast DADD" <your-email@gmail.com>',
+            from: '"Telfast DADD" <' + process.env.GMAIL_USER + '>',
             to: email,
-            subject: "Your DADD Certificate of Commitment",
-            text: `Hello Dr. ${lastName}, please find your certificate attached.`,
+            subject: "Your DADD Certificate",
             attachments: [{ filename: 'Certificate.jpg', content: buffer }]
         });
 
-        res.status(200).send('Success');
+        res.status(200).send('Certificate Sent!');
     } catch (err) {
         console.error(err);
-        res.status(500).send('Error generating certificate');
+        res.status(500).send('Processing Error');
     }
 });
 
-// 3. Logic to draw text on Image
-async function generateCertificateBuffer(name, imagePath) {
-    const image = await loadImage(imagePath);
-    const canvas = createCanvas(image.width, image.height);
-    const ctx = canvas.getContext('2d');
-
-    ctx.drawImage(image, 0, 0);
-    
-    // Styling
-    ctx.font = 'bold 45px Arial'; // Adjust size as needed
-    ctx.fillStyle = '#5e3378';
-    ctx.textAlign = 'center';
-
-    // X: Middle of image, Y: Adjust 515 based on the line position in your JPG
-    ctx.fillText(name, image.width / 2, 515);
-
-    return canvas.toBuffer('image/jpeg');
-}
-
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server active on port ${PORT}`));
