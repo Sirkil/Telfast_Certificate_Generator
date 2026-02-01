@@ -85,7 +85,7 @@ async function generateCertificate(name) {
     ctx.drawImage(img, 0, 0);
 
     // Draw the name on the certificate
-    ctx.font = 'bold 180px Arial';
+    ctx.font = 'bold 180px Poppins';
     ctx.fillStyle = '#5e3378'; // Purple color
     ctx.textAlign = 'center';
     ctx.fillText(name, canvas.width / 2, 1250);
