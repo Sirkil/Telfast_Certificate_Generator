@@ -17,20 +17,10 @@
         <p class="description text-gray-600 mb-6 text-sm" id="description">You can preview and download your certificate
             below.</p>
 
-        <!-- Email Confirmation Alert -->
-        <div id="emailAlert" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p class="text-green-800 text-sm">
-                ✅ <strong>Certificate sent!</strong> Check your email at <span id="userEmail"
-                    class="font-semibold"></span>
-            </p>
-        </div>
-
         <div class="preview-box border rounded-lg overflow-hidden mb-6 bg-gray-100 relative">
             <canvas id="certCanvas" class="w-full h-auto"></canvas>
 
-            <img id="sourceImage"
-                src="https://raw.githubusercontent.com/Sirkil/Telfast_Certificate_Generator/main/Certificate.jpeg"
-                crossorigin="anonymous" style="display:none;" onload="drawCertificate()">
+            <img id="sourceImage" src="Certificate.jpeg" style="display:none;" onload="drawCertificate()">
         </div>
 
         <button onclick="downloadPDF()"
@@ -45,14 +35,7 @@
         function drawCertificate() {
             const params = new URLSearchParams(window.location.search);
             const userName = params.get('name') || ""; // Get name from URL
-            const userEmail = params.get('email') || "";
-            const status = params.get('status') || "";
-
-            // Show email confirmation if email was sent
-            if (status === 'sent' && userEmail) {
-                document.getElementById('emailAlert').classList.remove('hidden');
-                document.getElementById('userEmail').textContent = userEmail;
-            }
+            const submissionDate = params.get('date') || ""; // Get date from URL (dd/mm/yy format)
 
             const canvas = document.getElementById('certCanvas');
             const ctx = canvas.getContext('2d');
@@ -65,13 +48,20 @@
             // 2. Draw Image
             ctx.drawImage(img, 0, 0);
 
-            // 3. Draw Name
+            // 3. Draw Name (centered on the blank line)
             if (userName) {
-                ctx.font = 'bold 180px Poppins';
+                ctx.font = 'bold 180px Arial';
                 ctx.fillStyle = '#ffffff';
                 ctx.textAlign = 'center';
-                // Adjust height (508) if needed
                 ctx.fillText(userName, canvas.width / 2, 1250);
+            }
+
+            // 4. Draw Date (positioned near the "Date:" label)
+            if (submissionDate) {
+                ctx.font = '60px Arial';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'left';
+                ctx.fillText(submissionDate, 850, 1750);
             }
         }
 
