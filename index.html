@@ -19,7 +19,6 @@
 
         <div class="preview-box border rounded-lg overflow-hidden mb-6 bg-gray-100 relative">
             <canvas id="certCanvas" class="w-full h-auto"></canvas>
-
             <img id="sourceImage" src="Certificate.jpeg" style="display:none;" onload="drawCertificate()">
         </div>
 
@@ -34,34 +33,87 @@
     <script>
         function drawCertificate() {
             const params = new URLSearchParams(window.location.search);
-            const userName = params.get('name') || ""; // Get name from URL
-            const submissionDate = params.get('date') || ""; // Get date from URL (dd/mm/yy format)
+            const rawName = params.get('name');
+            const rawDate = params.get('date');
+
+            // 1. Process Name: Add "Dr." Prefix
+            let displayName = "";
+            if (rawName) {
+                // Check if user already typed Dr. to avoid double prefix
+                if (rawName.toLowerCase().startsWith('dr') || rawName.toLowerCase().startsWith('dr.')) {
+                     displayName = rawName;
+                } else {
+                     displayName = `Dr. ${rawName}`;
+                }
+            }
+
+            // 2. Process Date: Handle JotForm format
+            let displayDate = "";
+            
+            if (rawDate) {
+                // Try to format JotForm date (usually YYYY-MM-DD HH:MM:SS) to DD/MM/YY
+                try {
+                    // Take only the date part (before the space)
+                    const datePart = rawDate.split(' ')[0]; 
+                    const parts = datePart.split('-'); // Split YYYY-MM-DD
+                    
+                    if (parts.length === 3) {
+                         // Reconstruct as DD/MM/YY
+                        displayDate = `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`;
+                    } else {
+                        displayDate = rawDate; // Fallback: use raw date if format is unexpected
+                    }
+                } catch (e) {
+                    displayDate = rawDate;
+                }
+            } else {
+                // If no date provided, use today's date
+                const today = new Date();
+                const day = String(today.getDate()).padStart(2, '0');
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const year = String(today.getFullYear()).slice(-2);
+                displayDate = `${day}/${month}/${year}`;
+            }
+
+            // Debug: Log parameters to console
+            console.log('Certificate Data:', {
+                originalName: rawName,
+                finalName: displayName,
+                originalDate: rawDate,
+                finalDate: displayDate
+            });
+
+            // Update UI description
+            const description = document.getElementById('description');
+            description.innerHTML = `You can preview and download your certificate below.<br><small style="color: #999;">Name: ${displayName || 'Not provided'} | Date: ${displayDate}</small>`;
 
             const canvas = document.getElementById('certCanvas');
             const ctx = canvas.getContext('2d');
             const img = document.getElementById('sourceImage');
 
-            // 1. Set Canvas size to match Image
+            // Set Canvas size to match Image
             canvas.width = img.naturalWidth;
             canvas.height = img.naturalHeight;
 
-            // 2. Draw Image
+            // Draw Background Image
             ctx.drawImage(img, 0, 0);
 
-            // 3. Draw Name (centered on the blank line)
-            if (userName) {
-                ctx.font = 'bold 180px Arial';
+            // Draw Name
+            if (displayName) {
+                ctx.font = 'bold 150px Arial';
                 ctx.fillStyle = '#ffffff';
                 ctx.textAlign = 'center';
-                ctx.fillText(userName, canvas.width / 2, 1250);
+                // Centered horizontally
+                ctx.fillText(displayName, canvas.width / 2, 1250);
             }
 
-            // 4. Draw Date (positioned near the "Date:" label)
-            if (submissionDate) {
-                ctx.font = '60px Arial';
+            // Draw Date
+            if (displayDate) {
+                ctx.font = '90px Arial';
                 ctx.fillStyle = '#ffffff';
-                ctx.textAlign = 'left';
-                ctx.fillText(submissionDate, 850, 1750);
+                ctx.textAlign = 'center';
+                // Centered horizontally (aligned with name) at Y=1925
+                ctx.fillText(displayDate, 1825, 1925);
             }
         }
 
