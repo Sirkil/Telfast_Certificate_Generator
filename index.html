@@ -19,7 +19,7 @@
 
         <div class="preview-box border rounded-lg overflow-hidden mb-6 bg-gray-100 relative">
             <canvas id="certCanvas" class="w-full h-auto"></canvas>
-            <img id="sourceImage" src="Certificate.jpeg" style="display:none;" onload="drawCertificate()">
+            <img id="sourceImage" src="Certificate_V2.jpeg" style="display:none;" onload="drawCertificate()">
         </div>
 
         <button onclick="downloadPDF()"
@@ -130,7 +130,7 @@
 
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
             doc.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
-            doc.save('DADD_Certificate.pdf');
+            doc.save('AlergyAcademy_Certificate.pdf');
         }
     </script>
 </body>
