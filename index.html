@@ -19,7 +19,7 @@
 
         <div class="preview-box border rounded-lg overflow-hidden mb-6 bg-gray-100 relative">
             <canvas id="certCanvas" class="w-full h-auto"></canvas>
-            <img id="sourceImage" src="Certificate_V2.jpeg" style="display:none;" onload="drawCertificate()">
+            <img id="sourceImage" src="Certificate_V3.jpg" style="display:none;" onload="drawCertificate()">
         </div>
 
         <button onclick="downloadPDF()"
@@ -41,24 +41,24 @@
             if (rawName) {
                 // Check if user already typed Dr. to avoid double prefix
                 if (rawName.toLowerCase().startsWith('dr') || rawName.toLowerCase().startsWith('dr.')) {
-                     displayName = rawName;
+                    displayName = rawName;
                 } else {
-                     displayName = `Dr. ${rawName}`;
+                    displayName = `Dr. ${rawName}`;
                 }
             }
 
             // 2. Process Date: Handle JotForm format
             let displayDate = "";
-            
+
             if (rawDate) {
                 // Try to format JotForm date (usually YYYY-MM-DD HH:MM:SS) to DD/MM/YY
                 try {
                     // Take only the date part (before the space)
-                    const datePart = rawDate.split(' ')[0]; 
+                    const datePart = rawDate.split(' ')[0];
                     const parts = datePart.split('-'); // Split YYYY-MM-DD
-                    
+
                     if (parts.length === 3) {
-                         // Reconstruct as DD/MM/YY
+                        // Reconstruct as DD/MM/YY
                         displayDate = `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`;
                     } else {
                         displayDate = rawDate; // Fallback: use raw date if format is unexpected
@@ -91,31 +91,50 @@
             const ctx = canvas.getContext('2d');
             const img = document.getElementById('sourceImage');
 
+            // Wait for image to be fully loaded
+            if (!img.complete || img.naturalWidth === 0) {
+                console.log('Image not loaded yet, waiting...');
+                return; // Exit and wait for onload to call this function again
+            }
+
+            console.log('Drawing certificate with image dimensions:', img.naturalWidth, 'x', img.naturalHeight);
+
             // Set Canvas size to match Image
             canvas.width = img.naturalWidth;
             canvas.height = img.naturalHeight;
 
             // Draw Background Image
             ctx.drawImage(img, 0, 0);
+            console.log('Background image drawn');
 
-            // Draw Name
+            // Draw Name (on the blank line after "CERTIFICATE")
             if (displayName) {
-                ctx.font = 'bold 150px Arial';
-                ctx.fillStyle = '#ee9020';
+                ctx.font = 'bold 40px Arial';
+                ctx.fillStyle = '#000000';
                 ctx.textAlign = 'center';
-                // Centered horizontally
-                ctx.fillText(displayName, canvas.width / 2, 1250);
+                // Centered on the blank line below "OF ATTENDANCE"
+                ctx.fillText(displayName, 210, 400);
+                console.log('Name drawn at position:', 300, 340);
             }
 
-            // Draw Date
+            // Draw Date (after "meeting on date:")
             if (displayDate) {
-                ctx.font = '90px Arial';
-                ctx.fillStyle = '#ffffff';
-                ctx.textAlign = 'center';
-                // Centered horizontally (aligned with name) at Y=1925
-                ctx.fillText(displayDate, 1825, 1925);
+                ctx.font = '28px Arial';
+                ctx.fillStyle = '#000000';
+                ctx.textAlign = 'left';
+                // After the "meeting on date:" text
+                ctx.fillText(displayDate, 340, 500);
+                console.log('Date drawn at position:', 500, 500);
             }
+
+            console.log('Certificate drawing complete!');
         }
+
+        // Also call drawCertificate when page loads, in case image is already cached
+        window.addEventListener('load', function () {
+            console.log('Page loaded, attempting to draw certificate');
+            drawCertificate();
+        });
 
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
